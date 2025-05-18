@@ -13,10 +13,12 @@ public class Cuenta {
 
   private double saldo = 0;
   private List<Movimiento> movimientos = new ArrayList<>();
+  private int cantDepositosDelDia;
 
   public Cuenta() {
     //es mejor no repetir logica y utilizar siempre un constructor
     this(0);
+    cantDepositosDelDia = 0;
   }
 
   public Cuenta(double montoInicial) {
@@ -25,19 +27,17 @@ public class Cuenta {
 
   public void poner(double cuanto) {
     validarMontoNegativo(cuanto);
-    if (getMovimientos().stream()
-        .filter(movimiento -> movimiento.fueDepositado(LocalDate.now()))
-        .count() >= 3) {
+    if (this.cantDepositosDelDia >= 3) {
       throw new MaximaCantidadDepositosException("Ya excedio los " + 3 + " depositos diarios");
     }
-
-    new Movimiento(LocalDate.now(), cuanto, true).agregateA(this);
+    cantDepositosDelDia++;
+    new Deposito(LocalDate.now(), cuanto).agregateA(this);
   }
 
   public void sacar(double cuanto) {
     validarMontoNegativo(cuanto);
     validarExtraccion(cuanto);
-    new Movimiento(LocalDate.now(), cuanto, false).agregateA(this);
+    new Extraccion(LocalDate.now(), cuanto).agregateA(this);
   }
 
   private void validarExtraccion(double cuanto) {
@@ -58,15 +58,14 @@ public class Cuenta {
     }
   }
 
-  public void agregarMovimiento(LocalDate fecha, double cuanto, boolean esDeposito) {
-    var movimiento = new Movimiento(fecha, cuanto, esDeposito);
+  public void agregarMovimiento(Movimiento movimiento) {
     movimientos.add(movimiento);
   }
 
   public double getMontoExtraidoA(LocalDate fecha) {
     return getMovimientos().stream()
-        .filter(movimiento -> !movimiento.isDeposito() && movimiento.getFecha().equals(fecha))
-        .mapToDouble(Movimiento::getMonto)
+        .filter(movimiento -> movimiento.esDeLaFecha(fecha))
+        .mapToDouble(Movimiento::getMontoExtraccion)
         .sum();
   }
 
