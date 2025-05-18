@@ -15,7 +15,8 @@ public class Cuenta {
   private List<Movimiento> movimientos = new ArrayList<>();
 
   public Cuenta() {
-    saldo = 0;
+    //es mejor no repetir logica y utilizar siempre un constructor
+    this(0);
   }
 
   public Cuenta(double montoInicial) {
